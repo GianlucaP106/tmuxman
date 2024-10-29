@@ -5,6 +5,7 @@ import (
 	"github.com/rivo/tview"
 )
 
+// UI wraps the tview application and holds a reference to the views.
 type UI struct {
 	*tview.Application
 
@@ -20,32 +21,74 @@ type UI struct {
 	preview *tview.TextView
 }
 
-const MODAL_NAME = "modal"
+const (
+	modalName         = "modal"
+	editorModalWidth  = 40
+	editorModalHeight = 5
+)
 
-func (ui *UI) confirm(title string, done func(bool)) {
-	m := tview.NewModal()
-	m.SetText(surroundSpace(title))
-	m.AddButtons([]string{"Enter - confirm | Esc - cancel"})
-	m.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-		done(buttonIndex > -1)
-		ui.closeModal()
-	})
-	m.SetBackgroundColor(tcell.ColorBlack)
-	m.SetBorderColor(tcell.ColorGreen)
-	m.SetBorder(false)
+// Opens a cheatsheet
+func (ui *UI) help(keys KeybdindingHolder) {
+	t := newTable("Cheatsheet", []string{"Key", "Description"}, func(idx int) {})
 
-	ui.openModal(m)
+	row := 1
+	for _, binding := range keys {
+		t.SetCell(row, 0, tview.NewTableCell(binding.key.display))
+		t.SetCell(row, 1, tview.NewTableCell(binding.description))
+		row++
+	}
+
+	c := center(t, 50, 20)
+	ui.openModal(c)
 }
 
+// Opens a confirmation modal.
+func (ui *UI) confirm(title string, done func(bool)) {
+	// build view
+	t := tview.NewTextView()
+	t.SetTitle(surroundSpace(title))
+	t.SetDynamicColors(true)
+
+	// set the style
+	t.SetBorder(true)
+	t.SetBackgroundColor(tcell.ColorNone)
+	t.SetBorderColor(tcell.ColorLightYellow)
+	t.SetTitleColor(tcell.ColorBlue)
+
+	// set the text
+	t.SetText("\n[green]Enter[white] - Confim  |  [red]Escape[white] - Cancel")
+	t.SetTextAlign(tview.AlignCenter)
+
+	// set func to close on enter/esc
+	t.SetDoneFunc(func(key tcell.Key) {
+		switch key {
+		case tcell.KeyEnter:
+			// confirm
+			done(true)
+		case tcell.KeyEsc:
+			// cancel
+			done(false)
+		}
+		ui.closeModal()
+	})
+
+	// center with dimensions
+	c := center(t, max(editorModalWidth, len(title)+6), editorModalHeight)
+	ui.openModal(c)
+}
+
+// Opens a single line editor modal.
 func (ui *UI) editor(title string, done func(string)) {
-	// build input field and set styles
+	// build input field
 	i := tview.NewInputField()
-	i.SetFieldBackgroundColor(tcell.ColorWhite)
-	i.SetFieldTextColor(tcell.ColorBlack)
+	i.SetTitle(surroundSpace(title))
+
+	// set styles
+	i.SetFieldBackgroundColor(tcell.ColorDimGray)
+	i.SetFieldTextColor(tcell.ColorWhite)
 	i.SetBackgroundColor(tcell.ColorNone)
 	i.SetBorder(true)
 	i.SetBorderColor(tcell.ColorGreen)
-	i.SetTitle(surroundSpace(title))
 	i.SetBorderPadding(1, 1, 1, 1)
 	i.SetTitleColor(tcell.ColorLightSteelBlue)
 
@@ -63,29 +106,32 @@ func (ui *UI) editor(title string, done func(string)) {
 	})
 
 	// center the input
-	c := center(i, 40, 5)
+	c := center(i, editorModalWidth, editorModalHeight)
 
 	// open the editor
 	ui.openModal(c)
 }
 
+// Opens a generic model around the passed primitive.
 func (ui *UI) openModal(v tview.Primitive) {
 	// open modal by adding a page
-	ui.root.AddPage(MODAL_NAME, v, true, true)
-	ui.root.ShowPage(MODAL_NAME)
+	ui.root.AddPage(modalName, v, true, true)
+	ui.root.ShowPage(modalName)
 }
 
+// Closes the openned modal.
 func (ui *UI) closeModal() {
 	// close modal by deleting the page
-	ui.root.RemovePage(MODAL_NAME)
+	ui.root.RemovePage(modalName)
 }
 
+// Wrapper over tview table to hold titles and other utils.
 type Table struct {
 	*tview.Table
 	colTitles []string
 }
 
-// Returns a new table with defaults and configs
+// Returns a new table with defaults and configs.
 func newTable(title string, colTitles []string, onSelectionChanged func(idx int)) *Table {
 	// init table and set common attributes
 	t := &Table{}
@@ -117,7 +163,7 @@ func newTable(title string, colTitles []string, onSelectionChanged func(idx int)
 			Background(tcell.ColorLightCyan).
 			Foreground(tcell.ColorBlack)
 		t.SetSelectedStyle(s)
-		t.SetBorderColor(tcell.ColorGreen)
+		t.SetBorderColor(tcell.ColorLightYellow)
 
 		// make table selectable when view is focused
 		t.SetSelectable(true, false)
@@ -171,19 +217,64 @@ func newTable(title string, colTitles []string, onSelectionChanged func(idx int)
 	return t
 }
 
-// internal method to set col titles
+// Internal method to set col titles.
 func (t *Table) setColTitles() {
 	for idx, title := range t.colTitles {
 		t.SetCell(0, idx, tview.NewTableCell(title).SetTextColor(tcell.ColorWheat))
 	}
 }
 
-// Overriding this method to reset the col titles
+// Gets the selected index.
+func (t *Table) getSelected() (idx int) {
+	row, _ := t.GetSelection()
+	if row == 0 {
+		return 0
+	}
+	return row - 1
+}
+
+// Overriding this method to reset the col titles.
 func (t *Table) Clear() {
 	t.Table.Clear()
 	t.setColTitles()
 }
 
+// Type containing a key binding.
+// Helpful for defining clean actions and for deriving cheatsheet.
+type Keybinding struct {
+	handler     func()
+	key         *Key
+	description string
+}
+
+// Key type for both handling event and displaying cheatsheet.
+type Key struct {
+	display string
+	rune    rune
+	key     tcell.Key
+}
+
+// KeybdindingHolder holds many keybindings.
+type KeybdindingHolder []*Keybinding
+
+// Handles a event by finidng the binding that mataches this event.
+func (k KeybdindingHolder) handle(event *tcell.EventKey) {
+	for _, binding := range k {
+		if event.Key() == tcell.KeyRune {
+			// if key is rune then we check the run
+			if event.Rune() == binding.key.rune {
+				binding.handler()
+				return
+			}
+		} else if event.Key() == binding.key.key {
+			// if key is not rune then we check the key
+			binding.handler()
+			return
+		}
+	}
+}
+
+// Centers a tview primitive.
 func center(p tview.Primitive, width, height int) *tview.Flex {
 	// build a flex wrap over the passed view to center it
 	return tview.NewFlex().

@@ -10,43 +10,68 @@ func (a *App) initSessionsView() {
 	// create the table, pass title, cols, and function that runs on table navigation
 	colTitles := []string{"Name", "Last Attached", "Created"}
 	t := newTable("Sessions", colTitles, func(idx int) {
-		// bounds check on the idx
-		if idx >= 0 && idx < len(a.state.sessions) {
-			// get selected session and sync windows, panes, preview
-			session := a.state.sessions[idx]
-			a.syncWindowsDown(session)
-		}
+		s := a.getSession()
+		a.syncWindowsDown(s)
 	})
 
 	// when session is selected
 	t.SetSelectedFunc(func(row, _ int) {
 		// suspend the ui and attach the session
-		s := a.state.sessions[row-1]
+		s := a.getSession()
 		a.ui.Suspend(func() {
 			s.Attach()
 		})
 	})
 
+	// defing keybindings
+	var kh KeybdindingHolder
+	kh = KeybdindingHolder([]*Keybinding{
+		{
+			key: &Key{
+				key:     tcell.KeyRune,
+				rune:    '?',
+				display: "?",
+			},
+			description: "Toggle cheatsheet",
+			handler: func() {
+				a.ui.help(kh)
+			},
+		},
+		{
+			key: &Key{
+				display: "Enter",
+			},
+			description: "Attach to session",
+		},
+		{
+			key: &Key{
+				key:     tcell.KeyRune,
+				rune:    'D',
+				display: "D",
+			},
+			description: "Kill session",
+			handler: func() {
+				a.ui.confirm("Are you sure you want to kill this session", func(b bool) {
+					if b {
+						idx := t.getSelected()
+						session := a.state.sessions[idx]
+						session.Kill()
+						a.syncAll()
+					}
+				})
+			},
+		},
+	})
+
 	// set key bindings
 	t.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		row, _ := t.GetSelection()
-		k := event.Key()
-		r := event.Rune()
-		switch {
-		// vim-like and if selection is last in list
-		case k == tcell.KeyCtrlJ || (isKeyDown(event) && row == t.GetRowCount()-1):
+		if event.Key() == tcell.KeyCtrlJ || (isKeyDown(event) && row == t.GetRowCount()-1) {
 			a.ui.SetFocus(a.ui.windows)
-		case r == '?':
-			a.ui.confirm("hello", func(b bool) {
-				if b {
-					t.SetTitle("hello world this is set")
-				}
-			})
-			// a.ui.editor("New session name", func(s string) {
-			// 	t.SetTitle(s)
-			// })
+			return event
 		}
 
+		kh.handle(event)
 		return event
 	})
 
@@ -75,4 +100,15 @@ func (a *App) syncSessions() {
 	for row, session := range a.state.sessions {
 		setRow(row+1, session)
 	}
+}
+
+func (a *App) getSession() *gotmux.Session {
+	idx := a.ui.sessions.getSelected()
+	// bounds check
+	if idx >= 0 && idx < len(a.state.sessions) {
+		// get selected session
+		return a.state.sessions[idx]
+	}
+
+	return nil
 }

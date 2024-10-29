@@ -60,3 +60,14 @@ func (a *App) syncPanes(window *gotmux.Window) {
 		setRow(row+1, pane)
 	}
 }
+
+func (a *App) getPane() *gotmux.Pane {
+	idx := a.ui.panes.getSelected()
+	// bounds check on the idx
+	if idx >= 0 && idx < len(a.state.panes) {
+		// return the pane
+		return a.state.panes[idx]
+	}
+
+	return nil
+}

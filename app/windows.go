@@ -13,12 +13,42 @@ func (a *App) initWindows() {
 	// create table
 	colTitles := []string{"ID", "Index", "Name", "Activity", "Active", "# Clients", "Size", "Cell Size"}
 	t := newTable("Windows", colTitles, func(idx int) {
-		// do a bounds check on the index
-		if idx >= 0 && idx < len(a.state.windows) {
-			// get selected window and sync
-			cur := a.state.windows[idx]
-			a.syncPanesDown(cur)
-		}
+		w := a.getWindow()
+		a.syncPanesDown(w)
+	})
+
+	t.SetSelectedFunc(func(row, column int) {
+		s := a.getSession()
+		a.ui.Suspend(func() {
+			s.Attach()
+		})
+	})
+
+	// defing keybindings
+	var kh KeybdindingHolder
+	kh = KeybdindingHolder([]*Keybinding{
+		{
+			key: &Key{
+				display: "Enter",
+			},
+			description: "Attach to session",
+			handler: func() {
+				// get selected session and attach
+				session := a.getSession()
+				session.Attach()
+			},
+		},
+		{
+			key: &Key{
+				key:     tcell.KeyRune,
+				rune:    '?',
+				display: "?",
+			},
+			description: "Toggle cheatsheet",
+			handler: func() {
+				a.ui.help(kh)
+			},
+		},
 	})
 
 	// set key bindings
@@ -34,6 +64,7 @@ func (a *App) initWindows() {
 			a.ui.SetFocus(a.ui.panes)
 		}
 
+		kh.handle(event)
 		return event
 	})
 
@@ -76,4 +107,15 @@ func (a *App) syncWindowsView(session *gotmux.Session) {
 	for row, w := range a.state.windows {
 		setRow(row+1, w)
 	}
+}
+
+func (a *App) getWindow() *gotmux.Window {
+	idx := a.ui.windows.getSelected()
+	// do a bounds check on the index
+	if idx >= 0 && idx < len(a.state.windows) {
+		// get selected window
+		return a.state.windows[idx]
+	}
+
+	return nil
 }
