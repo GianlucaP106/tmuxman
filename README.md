@@ -21,7 +21,11 @@ docker run -it --name tmuxman --rm ubuntu bash -c '
 
 ### Binary installation
 
-...
+```bash
+curl -fsSL https://raw.githubusercontent.com/GianlucaP106/tmuxman/main/install.bash | bash
+```
+
+> **See all binaries on the [latest release](https://github.com/GianlucaP106/tmuxman/releases/latest) page.**
 
 ### Build from source
 
