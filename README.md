@@ -8,6 +8,19 @@ A TUI to interact with tmux. Provides session, window and pane management with a
 
 ### Binary installation
 
+### Try with docker first
+
+```bash
+docker run -it --name tmuxman --rm ubuntu bash -c '
+        apt update &&
+        apt install -y git golang-go tmux curl unzip &&
+        cd &&
+        (curl -fsSL https://raw.githubusercontent.com/GianlucaP106/mynav/main/install.bash | bash) &&
+        export PATH="$PATH:$HOME/.tmuxman" &&
+        tmuxman
+    '
+```
+
 ...
 
 ### Build from source
