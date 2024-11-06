@@ -6,8 +6,6 @@ A TUI to interact with tmux. Provides session, window and pane management with a
 
 ## Installation
 
-### Binary installation
-
 ### Try with docker first
 
 ```bash
@@ -20,6 +18,8 @@ docker run -it --name tmuxman --rm ubuntu bash -c '
         tmuxman
     '
 ```
+
+### Binary installation
 
 ...
 
