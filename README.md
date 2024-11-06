@@ -6,9 +6,35 @@ A TUI to interact with tmux. Provides session, window and pane management with a
 
 ## Installation
 
+### Binary installation
+
 ...
 
+### Build from source
+
+```bash
+mkdir ~/.tmuxman/ 2>/dev/null | true
+cd ~/.tmuxman
+
+# clone the repo
+git clone https://github.com/GianlucaP106/tmuxman src
+cd src
+
+# build the project
+go build -o ~/.tmuxman/tmuxman
+
+# add to path
+export PATH="$PATH:$HOME/.tmuxman"
+
+# optionally delete the source code
+rm -rf ~/.tmuxman/src
+```
+
 >Note: tmux is required on the system. If it is not installed, tmuxman will attempt to install it.
+
+#### Supported paltforms
+
+Tmuxman is only supported for Linux and MacOS
 
 ## Usage
 
