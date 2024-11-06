@@ -13,7 +13,7 @@ docker run -it --name tmuxman --rm ubuntu bash -c '
         apt update &&
         apt install -y git golang-go tmux curl unzip &&
         cd &&
-        (curl -fsSL https://raw.githubusercontent.com/GianlucaP106/mynav/main/install.bash | bash) &&
+        (curl -fsSL https://raw.githubusercontent.com/GianlucaP106/tmuxman/main/install.bash | bash) &&
         export PATH="$PATH:$HOME/.tmuxman" &&
         tmuxman
     '
