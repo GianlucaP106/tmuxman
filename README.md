@@ -2,6 +2,8 @@
 
 A TUI to interact with tmux. Provides session, window and pane management with a preview of the client.
 
+![tmuxman](https://github.com/user-attachments/assets/113dc3b6-8f50-4f26-b107-93240732331a)
+
 ## Installation
 
 ...
