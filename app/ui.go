@@ -45,7 +45,7 @@ func (ui *UI) help(keys KeybdindingHolder) {
 		ui.closeModal()
 	})
 
-	c := center(t, 50, 20)
+	c := center(t, 50, 24)
 	ui.openModal(c)
 	ui.SetFocus(t)
 }
@@ -96,7 +96,7 @@ func (ui *UI) editor(title string, defaultVal string, done func(string)) {
 	i.SetFieldTextColor(tcell.ColorWhite)
 	i.SetBackgroundColor(tcell.ColorNone)
 	i.SetBorder(true)
-	i.SetBorderColor(tcell.ColorGreen)
+	i.SetBorderColor(tcell.ColorLightYellow)
 	i.SetBorderPadding(1, 1, 1, 1)
 	i.SetTitleColor(tcell.ColorLightSteelBlue)
 	i.SetText(defaultVal)

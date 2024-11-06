@@ -34,6 +34,7 @@ func (a *App) initTree() {
 	// style
 	t.SetBackgroundColor(tcell.ColorNone)
 	t.SetTitle(surroundSpace("Tree"))
+	t.SetTitleColor(tcell.ColorBlue)
 	t.SetGraphicsColor(tcell.ColorLightYellow)
 	t.SetBorder(true)
 
@@ -178,6 +179,12 @@ func (a *App) initTree() {
 				display: "Enter",
 			},
 			description: "Attach to item",
+		},
+		{
+			key: &Key{
+				display: "Left/Right Arrow",
+			},
+			description: "Cycle views",
 		},
 	})
 

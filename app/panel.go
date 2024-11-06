@@ -138,6 +138,23 @@ func (p *Panel) initSessionsView(a *App) {
 				})
 			},
 		},
+		{
+			key: &Key{
+				key:     tcell.KeyRune,
+				display: "space",
+				rune:    ' ',
+			},
+			description: "Focus windows",
+			handler: func() {
+				a.ui.SetFocus(p.windows)
+			},
+		},
+		{
+			key: &Key{
+				display: "Left/Right Arrow",
+			},
+			description: "Cycle views",
+		},
 	})
 
 	// set key bindings
@@ -231,6 +248,27 @@ func (p *Panel) initWindows(a *App) {
 				})
 			},
 		},
+		{
+			key: &Key{
+				key:     tcell.KeyEsc,
+				display: "esc",
+			},
+			description: "Go back",
+			handler: func() {
+				a.ui.SetFocus(p.sessions)
+			},
+		},
+		{
+			key: &Key{
+				key:     tcell.KeyRune,
+				display: "space",
+				rune:    ' ',
+			},
+			description: "Focus panes",
+			handler: func() {
+				a.ui.SetFocus(p.panes)
+			},
+		},
 	})
 
 	// set key bindings
@@ -271,12 +309,40 @@ func (p *Panel) initPanesView(a *App) {
 		{
 			key: &Key{
 				key:     tcell.KeyRune,
+				display: "D",
+				rune:    'D',
+			},
+			description: "Kill pane",
+			handler: func() {
+				a.ui.confirm("Are you sure you want to kill this pane?", func(b bool) {
+					if !b {
+						return
+					}
+
+					t.getSelected().Kill()
+					p.sync()
+				})
+			},
+		},
+		{
+			key: &Key{
+				key:     tcell.KeyRune,
 				rune:    '?',
 				display: "?",
 			},
 			description: "Toggle cheatsheet",
 			handler: func() {
 				a.ui.help(kh)
+			},
+		},
+		{
+			key: &Key{
+				key:     tcell.KeyEsc,
+				display: "esc",
+			},
+			description: "Go back",
+			handler: func() {
+				a.ui.SetFocus(p.windows)
 			},
 		},
 	})
